@@ -1,0 +1,37 @@
+---
+- hosts: ecommerceapp
+  tasks:
+    - name: create tomcat user
+      user:
+        name: tomcat
+
+    - name: install java
+      yum:
+        name: java-11
+        state: latest
+
+    - name: install tomcat
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - tomcat
+        - tomcat-webapps
+        - tomcat-admin-webapps
+
+    - name: Download artifacts from nexus and place it in webapps dir
+      maven_artifact:
+        group_id: com
+        artifact_id: EcommerceApp
+        version: 0.0.2
+        repository_url: http://54.145.40.188:8081/nexus/content/repositories/releases/
+        extension: war
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        dest: /var/lib/tomcat/webapps/EcommerceApp.war
+        mode: 644
+
+    - name: start tomcat service
+      service:
+        name: tomcat
+        state: started
